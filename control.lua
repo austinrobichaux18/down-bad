@@ -61,40 +61,58 @@ end
 ---Force this entity to any orientation until the input function returns TRUE on the entity.
 ---@param entity LuaEntity
 ---@param player_index any
----@param orientation_validator function Takes in a LuaEntity, and returns TRUE if the orientation is INVALID.
-local function force_orientation_condition(entity, player_index, orientation_validator)
+---@param is_orientation_invalid function Takes in a LuaEntity, and returns TRUE if the orientation is INVALID.
+local function force_orientation_condition(entity, player_index, is_orientation_invalid)
     game.print('is using force_orientation_condition')
 
-    if not orientation_validator(entity) then return end --Done without issues
+    if not is_orientation_invalid(entity) then return end --Done without issues
 
     entity.rotate{by_player=player_index}
     squash_undo_actions(player_index)
 
-    entity.rotate{by_player=player_index}
-    squash_undo_actions(player_index)
-
-    if not orientation_validator(entity) then return end --Done without issues
-        game.print('rotated twice but still bad')
+    if not is_orientation_invalid(entity) then return end --Done without issues
+        game.print('rotated  but still bad')
     
     local true_type = (entity.type == "entity-ghost") and entity.ghost_type or entity.type
     error("Could not find an allowed orientation for an entity of type: " .. entity.prototype.name .. ", True type: " .. true_type)
 end
 
 
----Return true if the given unadjustable inserter is in a valid orientation.
----@param entity LuaEntity
----@return boolean
-local function is_inserter_facing_east(entity)
-    return entity.drop_position.x > entity.pickup_position.x + 0.5
-end
-
 local function is_inserter_facing_south(entity)
     return entity.drop_position.y > entity.pickup_position.y + 0.5
 end
+
+local function is_entity_facing_south(entity)
+    return entity.direction == 8 --South, in Factorio's weird direction system
+end
+
+local function is_rail_facing_east(entity)
+    return entity.direction == 4 --East, in Factorio's weird direction system
+end
 --#endregion
 
---Initial code modified from Nancy B + Exfret the wise.
---Thanks to CodeGreen, for help sorting out horizontal splitters
+
+local entity_not_allowed_south = {
+    ["transport-belt"] = true,
+    ["underground-belt"] = true,
+    ["splitter"] = true,
+    ["pump"] = true,
+}
+
+array_to_hashset = function(array)
+  local hashset = {}
+  for _, value in pairs(array) do
+    hashset[value]=1
+  end
+  return hashset
+end
+
+--Hashset of prototype types that should keep requester points enabled.
+local maintain_requester_types = array_to_hashset(
+    {"character", "spider-vehicle", "cargo-landing-pad", "space-platform-hub"})
+
+local remove_logi_section_types = array_to_hashset({"car", })
+
 
 ---@param entity LuaEntity Entity to correct
 ---@param player_index uint? Index of the player to send notifications, if applicable
@@ -113,10 +131,12 @@ function main.direction_correction(entity, player_index, skip_recheck)
     if entity.type == "entity-ghost" then 
         entity_type = entity.ghost_type end
 
-    -- --Requester check
+    --Requester check
+    -- investigate targeted_items_pickup and targeted_items_deliver fields from get_requester_point
     -- local req_point = entity.get_requester_point()
     -- if req_point and not maintain_requester_types[entity_type] then
     --     req_point.enabled = false
+       
     --     local sections = entity.get_logistic_sections()
     --     if remove_logi_section_types[entity_type] and sections then
     --         for i = 1, sections.sections_count do
@@ -125,15 +145,31 @@ function main.direction_correction(entity, player_index, skip_recheck)
     --     end
     -- end
 
+    -- Only horizontal rails
+    if entity_type:find("rail") then
+        if entity_type == "straight-rail" then
+            if not is_rail_facing_east(entity) then
+                game.players[player_index].mine_entity(entity,true)
+                squash_undo_actions(player_index)
+                end
+        else
+            game.players[player_index].mine_entity(entity,true)
+            squash_undo_actions(player_index)
+        end
+    end
+
+    if entity_not_allowed_south[entity_type] then
+            force_orientation_condition(entity, player_index, is_entity_facing_south)
+            end
+
     --Inserters are their own beast.
-    --Rotate relevant items to not conflict with wind
     if entity_type == "inserter" then
         local true_prototype = entity.type == "entity-ghost" and entity.ghost_prototype or entity.prototype
         if true_prototype.allow_custom_vectors then
             try_adjust_inserter(entity)
         else 
             force_orientation_condition(entity, player_index, is_inserter_facing_south)
-        end
+        end 
     end
 end
 
@@ -148,4 +184,3 @@ end)
 script.on_event(defines.events.on_player_rotated_entity, function(event)
     main.direction_correction(event.entity, event.player_index)
 end)
-
