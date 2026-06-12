@@ -1,4 +1,4 @@
-[![Release](https://github.com/fgardt/factorio-mod-template/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/fgardt/factorio-mod-template/actions/workflows/release.yml)
+[![Release](https://github.com/austinrobichaux18/Down-Bad/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/austinrobichaux18/Down-Bad/actions/workflows/release.yml)
 <!--                           ^======[REPLACE THIS]======^                                                                          ^======[REPLACE THIS]======^  -->
 
 # factorio-mod-template
