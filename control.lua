@@ -165,7 +165,107 @@ end
 
 -- todo check with modded inserters
 -- todo try to make bots not fly south if they are carrying items
-
+local down_warning_lore = {
+    "The southern boundary is no longer mapped.",
+    "That direction returns null coordinates.",
+    "Something below has been sealed off.",
+    "You feel the world refuse your step.",
+    "South is marked as non-existent terrain.",
+    "The grid collapses when you look down there.",
+    "A prior correction removed that path.",
+    "The system denies access to lower vectors.",
+    "You are being gently redirected upward.",
+    "The terrain loses definition below you.",
+    "That axis is no longer stable.",
+    "The world file is missing that region.",
+    "You sense an invisible boundary.",
+    "Movement is rejected by unseen rules.",
+    "The ground there is not fully rendered.",
+    "A warning echoes from below: stop.",
+    "That direction has been deprecated.",
+    "The map refuses to extend further.",
+    "Something edits your trajectory.",
+    "You feel pressure pushing you back.",
+    "South behaves like a closed function.",
+    "The environment rejects downward intent.",
+    "A system constraint blocks progression.",
+    "That path is commented out of reality.",
+    "You approach an invalid state.",
+    "The world corrects your movement.",
+    "Below you, nothing resolves correctly.",
+    "The simulation flags that direction.",
+    "A silent handler intercepts your step.",
+    "You are not permitted to continue south.",
+    "The space below is quarantined.",
+    "That region is behind a checksum error.",
+    "The world denies continuity downward.",
+    "A missing chunk prevents passage.",
+    "You feel data loss beneath your feet.",
+    "The terrain folds away from you.",
+    "That direction returns no response.",
+    "Something rewrites your position.",
+    "South is outside supported bounds.",
+    "You detect a rollback field.",
+    "The world refuses deeper traversal.",
+    "That axis has been invalidated.",
+    "A boundary you cannot cross remains.",
+    "The simulation avoids rendering ahead.",
+    "You are pushed away from that path.",
+    "The environment resists your intent.",
+    "Something prevents further descent.",
+    "That vector is marked forbidden.",
+    "The world is incomplete below.",
+    "You feel resistance in the fabric of space.",
+    "A hidden rule enforces stillness.",
+    "The map stops responding downward.",
+    "That region is under maintenance.",
+    "You sense a protective constraint.",
+    "The system denies spatial extension.",
+    "Something corrects your direction.",
+    "South has been collapsed out of existence.",
+    "You cannot persist in that direction.",
+    "The world rejects invalid movement.",
+    "A fault line blocks the way.",
+    "That area is no longer reachable.",
+    "You feel the world overwrite your step.",
+    "The terrain is not defined there.",
+    "A missing reference prevents travel.",
+    "The simulation refuses expansion south.",
+    "You are held in place by unseen logic.",
+    "That direction is outside bounds.",
+    "The world truncates further movement.",
+    "A constraint prevents continuation.",
+    "You feel reality tighten around you.",
+    "The map refuses to resolve below.",
+    "That direction is structurally invalid.",
+    "A system rule denies passage.",
+    "The world deletes the path as you approach.",
+    "You sense an error in spatial flow.",
+    "South is locked behind an exception.",
+    "The environment prevents further descent.",
+    "A correction field pushes you back.",
+    "That region has been removed.",
+    "You feel the world desync below.",
+    "The terrain rejects your presence.",
+    "A boundary algorithm stops you.",
+    "The simulation forbids that movement.",
+    "You cannot index further south.",
+    "That space is not accessible.",
+    "The world collapses that route.",
+    "A missing layer blocks progression.",
+    "You are corrected to safer coordinates.",
+    "The system enforces upward bias.",
+    "That direction is intentionally absent.",
+    "The world refuses to allocate space.",
+    "You feel a hard limit beneath you.",
+    "The map ends in that direction.",
+    "A protective barrier exists below.",
+    "The environment disallows traversal.",
+    "South is outside permitted range.",
+    "You sense a forced repositioning.",
+    "That path is no longer valid.",
+    "The world denies downward existence."
+}
 
 script.on_event(defines.events.on_built_entity, function(event)
     main.direction_correction(event.entity, event.player_index)
@@ -196,12 +296,16 @@ script.on_event(defines.events.on_player_changed_position, function(event)
     if last_position and current_position.y > last_position.y  then
         player.teleport{x = current_position.x, y = last_position.y}
 
-           player.surface.create_trivial_smoke{
-            name = "fire-smoke", 
-            position = {
-                x = current_position.x,
-                y = current_position.y + 1
-            }}
+        player.surface.create_trivial_smoke{
+        name = "fire-smoke", 
+        position = {
+            x = current_position.x,
+            y = current_position.y + 1
+        }}
+
+        if math.random(1, 10) == 1 then
+            player.print(player.name .. ": " .. down_warning_lore[math.random(1, #down_warning_lore)]) 
+        end
         return
     end
     player_positions[event.player_index] = {
