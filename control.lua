@@ -178,3 +178,35 @@ end)
 script.on_event(defines.events.on_player_rotated_entity, function(event)
     main.direction_correction(event.entity, event.player_index)
 end)
+
+local player_positions = {}
+script.on_event(defines.events.on_player_changed_position, function(event) 
+
+    local allow_move_down =
+        settings.global["down-bad-allow-players-move-down"].value
+
+    if allow_move_down then return end
+    
+    local player = game.players[event.player_index]
+    if not player or not player.character then return end
+
+    local current_position = player.physical_position
+    local last_position = player_positions[event.player_index]
+
+    if last_position and current_position.y > last_position.y  then
+        player.teleport{x = current_position.x, y = last_position.y}
+
+           player.surface.create_trivial_smoke{
+            name = "fire-smoke", 
+            position = {
+                x = current_position.x,
+                y = current_position.y + 1
+            }}
+        return
+    end
+    player_positions[event.player_index] = {
+            x = current_position.x,
+            y = current_position.y
+        }
+end)
+
