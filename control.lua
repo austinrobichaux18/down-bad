@@ -92,6 +92,7 @@ local entity_not_allowed_south = {
     ["underground-belt"] = true,
     ["splitter"] = true,
     ["pump"] = true,
+    ["mining-drill"] = true,
 }
 
 array_to_hashset = function(array)
