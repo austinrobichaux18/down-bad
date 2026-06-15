@@ -1,6 +1,4 @@
---Initial code modified from LoupAndSoup's Rubia mod, with permission.
--- local sample = require("sample")
-local main = {}
+--Initial code modified from LoupAndSnoop's Rubia mod, with permission.
 
 --Given a valid adjustable inserter entity, apply adjustments that will work with adjustable inserter mods.
 --Return true if an edit was made.
@@ -78,13 +76,12 @@ local function is_inserter_facing_south(entity)
 end
 
 local function is_entity_facing_south(entity)
-    return entity.direction == 8 --South, in Factorio's weird direction system
+    return entity.direction == defines.direction.south
 end
 
 local function is_rail_facing_east(entity)
-    return entity.direction == 4 --East, in Factorio's weird direction system
+    return entity.direction == defines.direction.east 
 end
---#endregion
 
 
 local entity_not_allowed_south = {
@@ -113,7 +110,7 @@ local remove_logi_section_types = array_to_hashset({"car", })
 ---@param entity LuaEntity Entity to correct
 ---@param player_index uint? Index of the player to send notifications, if applicable
 ---@param skip_recheck boolean? if true, then don't recheck the same entity next frame.
-function main.direction_correction(entity, player_index, skip_recheck)
+local function direction_correction(entity, player_index, skip_recheck)
     if  not entity 
         or not entity.valid
          then return end
@@ -165,152 +162,88 @@ end
 
 -- todo check with modded inserters
 -- todo try to make bots not fly south if they are carrying items
-local down_warning_lore = {
-    "The southern boundary is no longer mapped.",
-    "That direction returns null coordinates.",
-    "Something below has been sealed off.",
-    "You feel the world refuse your step.",
-    "South is marked as non-existent terrain.",
-    "The grid collapses when you look down there.",
-    "A prior correction removed that path.",
-    "The system denies access to lower vectors.",
-    "You are being gently redirected upward.",
-    "The terrain loses definition below you.",
-    "That axis is no longer stable.",
-    "The world file is missing that region.",
-    "You sense an invisible boundary.",
-    "Movement is rejected by unseen rules.",
-    "The ground there is not fully rendered.",
-    "A warning echoes from below: stop.",
-    "That direction has been deprecated.",
-    "The map refuses to extend further.",
-    "Something edits your trajectory.",
-    "You feel pressure pushing you back.",
-    "South behaves like a closed function.",
-    "The environment rejects downward intent.",
-    "A system constraint blocks progression.",
-    "That path is commented out of reality.",
-    "You approach an invalid state.",
-    "The world corrects your movement.",
-    "Below you, nothing resolves correctly.",
-    "The simulation flags that direction.",
-    "A silent handler intercepts your step.",
-    "You are not permitted to continue south.",
-    "The space below is quarantined.",
-    "That region is behind a checksum error.",
-    "The world denies continuity downward.",
-    "A missing chunk prevents passage.",
-    "You feel data loss beneath your feet.",
-    "The terrain folds away from you.",
-    "That direction returns no response.",
-    "Something rewrites your position.",
-    "South is outside supported bounds.",
-    "You detect a rollback field.",
-    "The world refuses deeper traversal.",
-    "That axis has been invalidated.",
-    "A boundary you cannot cross remains.",
-    "The simulation avoids rendering ahead.",
-    "You are pushed away from that path.",
-    "The environment resists your intent.",
-    "Something prevents further descent.",
-    "That vector is marked forbidden.",
-    "The world is incomplete below.",
-    "You feel resistance in the fabric of space.",
-    "A hidden rule enforces stillness.",
-    "The map stops responding downward.",
-    "That region is under maintenance.",
-    "You sense a protective constraint.",
-    "The system denies spatial extension.",
-    "Something corrects your direction.",
-    "South has been collapsed out of existence.",
-    "You cannot persist in that direction.",
-    "The world rejects invalid movement.",
-    "A fault line blocks the way.",
-    "That area is no longer reachable.",
-    "You feel the world overwrite your step.",
-    "The terrain is not defined there.",
-    "A missing reference prevents travel.",
-    "The simulation refuses expansion south.",
-    "You are held in place by unseen logic.",
-    "That direction is outside bounds.",
-    "The world truncates further movement.",
-    "A constraint prevents continuation.",
-    "You feel reality tighten around you.",
-    "The map refuses to resolve below.",
-    "That direction is structurally invalid.",
-    "A system rule denies passage.",
-    "The world deletes the path as you approach.",
-    "You sense an error in spatial flow.",
-    "South is locked behind an exception.",
-    "The environment prevents further descent.",
-    "A correction field pushes you back.",
-    "That region has been removed.",
-    "You feel the world desync below.",
-    "The terrain rejects your presence.",
-    "A boundary algorithm stops you.",
-    "The simulation forbids that movement.",
-    "You cannot index further south.",
-    "That space is not accessible.",
-    "The world collapses that route.",
-    "A missing layer blocks progression.",
-    "You are corrected to safer coordinates.",
-    "The system enforces upward bias.",
-    "That direction is intentionally absent.",
-    "The world refuses to allocate space.",
-    "You feel a hard limit beneath you.",
-    "The map ends in that direction.",
-    "A protective barrier exists below.",
-    "The environment disallows traversal.",
-    "South is outside permitted range.",
-    "You sense a forced repositioning.",
-    "That path is no longer valid.",
-    "The world denies downward existence."
-}
+-- 
 
 script.on_event(defines.events.on_built_entity, function(event)
-    main.direction_correction(event.entity, event.player_index)
+    direction_correction(event.entity, event.player_index)
 end)
 
 script.on_event(defines.events.on_player_flipped_entity, function(event)
-    main.direction_correction(event.entity, event.player_index)
+    direction_correction(event.entity, event.player_index)
 end)
 
 script.on_event(defines.events.on_player_rotated_entity, function(event)
-    main.direction_correction(event.entity, event.player_index)
+    direction_correction(event.entity, event.player_index)
 end)
 
-local player_positions = {}
-script.on_event(defines.events.on_player_changed_position, function(event) 
-
-    local allow_move_down =
+script.on_event(defines.events.on_player_joined_game, function(event)
+        local allow_move_down =
         settings.global["down-bad-allow-players-move-down"].value
-
-    if allow_move_down then return end
-    
-    local player = game.players[event.player_index]
-    if not player or not player.character then return end
-
-    local current_position = player.physical_position
-    local last_position = player_positions[event.player_index]
-
-    if last_position and current_position.y > last_position.y  then
-        player.teleport{x = current_position.x, y = last_position.y}
-
-        player.surface.create_trivial_smoke{
-        name = "fire-smoke", 
-        position = {
-            x = current_position.x,
-            y = current_position.y + 1
-        }}
-
-        if math.random(1, 10) == 1 then
-            player.print(player.name .. ": " .. down_warning_lore[math.random(1, #down_warning_lore)]) 
+        
+        game.print( {"player-join-world.1"})
+        if allow_move_down then 
+            game.print( {"player-join-world.2"})
+        else  
+            game.print( {"player-join-world.3"})
         end
+end)
+
+-- Prevents player from moving south if setting is enabled local player_positions = {}storage.player_positions = storage.player_positions or {}
+
+script.on_init(function()
+    storage.player_positions = storage.player_positions or {}
+end)
+
+script.on_event(defines.events.on_player_changed_position, function(event)
+
+    if settings.global["down-bad-allow-players-move-down"].value then
         return
     end
-    player_positions[event.player_index] = {
-            x = current_position.x,
-            y = current_position.y
-        }
-end)
 
+    local player = game.get_player(event.player_index)
+    if not player or not player.character then
+        return
+    end
+
+    local player_index = event.player_index
+    local surface_index = player.surface.index
+    local current_position = player.position
+
+    storage.player_positions = storage.player_positions or {}
+    storage.player_positions[player_index] =
+        storage.player_positions[player_index] or {}
+
+    local player_data = storage.player_positions[player_index]
+    local last_position_this_surface = player_data[surface_index]
+
+    if last_position_this_surface and current_position.y > last_position_this_surface.y then
+
+        player.teleport{
+            x = current_position.x,
+            y = last_position_this_surface.y
+        }
+
+        player.surface.create_trivial_smoke{
+            name = "fire-smoke",
+            position = {
+                x = current_position.x,
+                y = current_position.y + 1
+            }
+        }
+
+        if math.random(1, 100) == 1 then
+            player.print({
+                "",
+                "[color=red][REDACTED][/color]: ",
+                {"down-bad-lore." .. math.random(1, 99)}
+            })
+        end
+
+        return
+    end
+
+    player_data[surface_index] = {
+        x = current_position.x,
+        y = current_position.y
+    }
+end)

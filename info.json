@@ -4,7 +4,7 @@
   "title": "Down Bad",
   "author": "Twiggy9858",
   "homepage": "https://github.com/austinrobichaux18/Down-Bad",
-  "description": "This is a simple challenge run mod makes it so that you cannot move items downwards (south). You must build UP and OUT. DOWN. BAD. Inspired by and modified based on LoupAndSoup's Rubia mod.",
+  "description": "This is a simple challenge run mod makes it so that you cannot move items downwards (south). You must build UP and OUT. DOWN. BAD. Inspired by and modified based on LoupAndSnoop's Rubia mod.",
   "factorio_version": "2.0",
   "dependencies": [
     "base"
