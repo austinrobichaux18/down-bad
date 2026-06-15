@@ -162,7 +162,6 @@ end
 
 -- todo check with modded inserters
 -- todo try to make bots not fly south if they are carrying items
--- 
 
 script.on_event(defines.events.on_built_entity, function(event)
     direction_correction(event.entity, event.player_index)
@@ -188,7 +187,7 @@ script.on_event(defines.events.on_player_joined_game, function(event)
         end
 end)
 
--- Prevents player from moving south if setting is enabled local player_positions = {}storage.player_positions = storage.player_positions or {}
+-- Prevents player from moving south if setting is enabled local
 
 script.on_init(function()
     storage.player_positions = storage.player_positions or {}
@@ -208,7 +207,7 @@ script.on_event(defines.events.on_player_changed_position, function(event)
     local player_index = event.player_index
     local surface_index = player.surface.index
     local current_position = player.position
-    
+
     storage.player_positions = storage.player_positions or {}
     storage.player_positions[player_index] =
         storage.player_positions[player_index] or {}
