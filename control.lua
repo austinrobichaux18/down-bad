@@ -208,7 +208,7 @@ script.on_event(defines.events.on_player_changed_position, function(event)
     local player_index = event.player_index
     local surface_index = player.surface.index
     local current_position = player.position
---test
+    
     storage.player_positions = storage.player_positions or {}
     storage.player_positions[player_index] =
         storage.player_positions[player_index] or {}
